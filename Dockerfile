@@ -47,4 +47,3 @@ CMD ["sh", "-c", "php-fpm -D && nginx -g 'daemon off;'"]
 
 
 
-
