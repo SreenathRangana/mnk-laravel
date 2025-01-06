@@ -240,5 +240,5 @@ Here is a **step-by-step guide** to set up a Laravel project on an **Ubuntu EC2 
 
 You now have a Laravel application running on an Ubuntu EC2 instance with basic routes (`/login` and `/dashboard`).
 
-
+The Screenshots is available in mnk-laravel/images folder 
 
