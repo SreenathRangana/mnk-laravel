@@ -1,5 +1,5 @@
 # Use official PHP image as the base image
-FROM php:8.3-fpm
+FROM php:8.2-fpm
 
 # Set working directory
 WORKDIR /var/www
@@ -15,8 +15,11 @@ RUN apt-get update && apt-get install -y \
     curl \
     nginx
 
+# Clear cache
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
 # Install PHP extensions
-RUN docker-php-ext-install pdo_mysql gd
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 
 # Install Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
@@ -25,7 +28,7 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 COPY . .
 
 # Install application dependencies
-RUN composer install
+RUN composer install --no-interaction
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www \
@@ -38,5 +41,10 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
 
 # Start Nginx and PHP-FPM
-CMD ["sh", "-c", "service nginx start && php-fpm"]
+#CMD ["sh", "-c", "service nginx start && php-fpm"]
+
+CMD ["sh", "-c", "php-fpm -D && nginx -g 'daemon off;'"]
+
+
+
 
