@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = 'sreenathkk96/laravel-app:latest'
+        IMAGE_NAME = 'sreenathkk96/laravelapp:v1'
         DOCKER_REGISTRY = 'docker.io'  // Use your registry, e.g., 'amazonaws.com' for ECR
     }
 

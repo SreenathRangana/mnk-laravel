@@ -240,5 +240,126 @@ Here is a **step-by-step guide** to set up a Laravel project on an **Ubuntu EC2 
 
 You now have a Laravel application running on an Ubuntu EC2 instance with basic routes (`/login` and `/dashboard`).
 
-The Screenshots is available in mnk-laravel/images folder 
+The Screenshots is available in mnk-laravel/images folder
+
+
+
+
+### Docker Laravel Docker Image: sreenathkk96/laravelapp:v1
+
+## Terraform SCripts for EKS and VPC in the repo /mnk-laravel/terraform
+
+
+
+
+
+
+
+### docker-compose.yml
+```bash
+version: '3'
+services:
+
+  #PHP Service
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: digitalocean.com/php
+    container_name: app
+    restart: unless-stopped
+    tty: true
+    environment:
+      SERVICE_NAME: app
+      SERVICE_TAGS: dev
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+      - ./php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - app-network
+
+  #Nginx Service
+  webserver:
+    image: nginx:alpine
+    container_name: webserver
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./:/var/www
+      - ./nginx/conf.d/:/etc/nginx/conf.d/
+    networks:
+      - app-network
+
+  #MySQL Service
+  db:
+    image: mysql:5.7.22
+    container_name: db
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: laravel
+      MYSQL_ROOT_PASSWORD: your_mysql_root_password
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    volumes:
+      - dbdata:/var/lib/mysql/
+      - ./mysql/my.cnf:/etc/mysql/my.cnf
+    networks:
+      - app-network
+
+#Docker Networks
+networks:
+  app-network:
+    driver: bridge
+#Volumes
+volumes:
+  dbdata:
+    driver: local
+```
+### Dockerfile 
+
+```bash
+# Use the official PHP image with FPM
+FROM php:8.2-fpm
+
+# Install required dependencies
+RUN apt-get update && apt-get install -y \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    libzip-dev \
+    libonig-dev \
+    unzip \
+    curl \
+    git \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install pdo_mysql mbstring zip exif pcntl gd \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Composer
+COPY --from=composer:2.7 /usr/bin/composer /usr/bin/composer
+
+# Set working directory
+WORKDIR /var/www/laravel-app
+
+# Copy Laravel application code
+COPY . /var/www/laravel-app
+
+# Adjust permissions for Laravel directories
+RUN chmod -R 775 /var/www/laravel-app/storage /var/www/laravel-app/bootstrap/cache || true \
+    && chown -R www-data:www-data /var/www/laravel-app/storage /var/www/laravel-app/bootstrap/cache || true
+
+# Expose port 9000 for PHP-FPM
+EXPOSE 9000
+
+# Start PHP-FPM
+CMD ["php-fpm"]
+```
 
