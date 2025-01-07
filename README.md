@@ -1,66 +1,365 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# sample-laravel-app
+Here is a **step-by-step guide** to set up a Laravel project on an **Ubuntu EC2 instance**, including the configuration, basic Laravel application pages, and commands to execut also login and dashboard and dockercompose and dockerfile
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+---
 
-## About Laravel
+### **Step 1: Launch an Ubuntu EC2 Instance**
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+1. **Create the Instance:**
+   - Log in to AWS Management Console.
+   - Navigate to **EC2** > **Launch Instance**.
+   - Select **Ubuntu 20.04 LTS** as the AMI.
+   - Choose an instance type (`t2.medium` `volume 30GB` for free tier).
+   - Configure **security groups**:
+     - Allow **22 (SSH)**, **80 (HTTP)**, and optionally **443 (HTTPS)**.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+2. **Connect to the Instance:**
+   - Use the private key (`.pem`) to SSH into the instance:
+     ```bash
+     ssh -i "your-key.pem" ubuntu@<your-ec2-public-ip>
+     ```
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+### **Step 2: Update and Install Required Packages**
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+1. **Update System Packages:**
+   ```bash
+   sudo apt update && sudo apt upgrade -y
+   ```
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+2. **Install PHP and Required Extensions:**
+   ```bash
+   sudo apt install php-cli php-fpm php-mysql php-mbstring php-xml php-bcmath php-curl unzip git -y
+   ```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+3. **Install Composer:**
+   ```bash
+   curl -sS https://getcomposer.org/installer | php
+   sudo mv composer.phar /usr/local/bin/composer
+   ```
 
-## Laravel Sponsors
+4. **Install MySQL (Optional):**
+   ```bash
+   sudo apt install mysql-server -y
+   sudo mysql_secure_installation
+   ```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+5. **Install Nginx:**
+   ```bash
+   sudo apt install nginx -y
+   ```
 
-### Premium Partners
+---
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+### **Step 3: Set Up Laravel Project**
 
-## Contributing
+1. **Download Laravel:**
+   ```bash
+   composer create-project --prefer-dist laravel/laravel laravel-app
+   ```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+2. **Move Project to Web Directory:**
+   ```bash
+   sudo mv laravel-app /var/www/laravel-app
+   ```
 
-## Code of Conduct
+3. **Set Permissions:**
+   ```bash
+   sudo chown -R www-data:www-data /var/www/laravel-app
+   sudo chmod -R 775 /var/www/laravel-app/storage /var/www/laravel-app/bootstrap/cache
+   ```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+4. **Set Up the `.env` File:**
+   ```bash
+   cd /var/www/laravel-app
+   cp .env.example .env
+   php artisan key:generate
+   ```
 
-## Security Vulnerabilities
+   Update `.env` for database connection if needed:
+   ```env
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=laravel
+   DB_USERNAME=root
+   DB_PASSWORD=your_mysql_password
+   ```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+   If using MySQL, create a database:
+   ```bash
+   sudo mysql -u root -p
+   CREATE DATABASE laravel;
+   EXIT;
+   ```
 
-## License
+5. **Run Laravel Migrations:**
+   ```bash
+   php artisan migrate
+   ```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+
+### **Step 4: Configure Nginx**
+
+1. **Create Nginx Configuration for Laravel:**
+   ```bash
+   sudo nano /etc/nginx/sites-available/laravel
+   ```
+
+   Add the following configuration:
+   ```nginx
+   server {
+       listen 80;
+       server_name your-ec2-public-ip;
+
+       root /var/www/laravel-app/public;
+
+       index index.php index.html;
+
+       location / {
+           try_files $uri $uri/ /index.php?$query_string;
+       }
+
+       location ~ \.php$ {
+           include snippets/fastcgi-php.conf;
+           fastcgi_pass unix:/var/run/php/php8.1-fpm.sock;
+           fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+           include fastcgi_params;
+       }
+
+       location ~ /\.ht {
+           deny all;
+       }
+   }
+   ```
+
+2. **Enable the Site and Restart Nginx:**
+   ```bash
+   sudo ln -s /etc/nginx/sites-available/laravel /etc/nginx/sites-enabled/
+   sudo nginx -t
+   sudo systemctl restart nginx
+   ```
+
+3. **Test the Setup:**
+   Visit `http://<your-ec2-public-ip>` in a browser.
+
+---
+
+### **Step 5: Add Basic Laravel Pages**
+
+1. **Add Routes:**
+   Edit `routes/web.php`:
+   ```php
+   Route::get('/login', function () {
+       return view('login');
+   });
+
+   Route::get('/dashboard', function () {
+       return view('dashboard');
+   });
+   ```
+
+2. **Create Views:**
+
+   **Login Page (`resources/views/login.blade.php`):**
+   ```html
+   <!DOCTYPE html>
+   <html>
+   <head>
+       <title>Login</title>
+   </head>
+   <body>
+       <h1>Login Page</h1>
+       <form>
+           <label>Email:</label>
+           <input type="email" name="email" required>
+           <br>
+           <label>Password:</label>
+           <input type="password" name="password" required>
+           <br>
+           <button type="submit">Login</button>
+       </form>
+   </body>
+   </html>
+   ```
+
+   **Dashboard Page (`resources/views/dashboard.blade.php`):**
+   ```html
+   <!DOCTYPE html>
+   <html>
+   <head>
+       <title>Dashboard</title>
+   </head>
+   <body>
+       <h1>Welcome to the MNK Dashboard</h1>
+   </body>
+   </html>
+   ```
+
+3. **Test Routes:**
+   Visit:
+   - `http://<your-ec2-public-ip>/login`
+   - `http://<your-ec2-public-ip>/dashboard`
+
+---
+
+### **Step 6: Enable HTTPS (Optional)**
+
+1. **Install Certbot:**
+   ```bash
+   sudo apt install certbot python3-certbot-nginx -y
+   ```
+
+2. **Get an SSL Certificate:**
+   ```bash
+   sudo certbot --nginx -d your-domain-name
+   ```
+
+3. **Test HTTPS:**
+   Visit `https://your-domain-name`.
+
+---
+
+### **Step 7: Monitor and Maintain**
+
+1. **Check Logs:**
+   - Laravel logs: `/var/www/laravel-app/storage/logs/`
+   - Nginx logs: `/var/log/nginx/`
+
+2. **Restart Services if Needed:**
+   ```bash
+   sudo systemctl restart php8.1-fpm
+   sudo systemctl restart nginx
+   ```
+
+---
+
+### **Conclusion**
+
+You now have a Laravel application running on an Ubuntu EC2 instance with basic routes (`/login` and `/dashboard`).
+
+The Screenshots is available in mnk-laravel/images folder
+
+
+
+
+### Docker Laravel Docker Image: sreenathkk96/laravelapp:v1
+
+## Terraform SCripts for EKS and VPC in the repo /mnk-laravel/terraform
+
+
+
+
+
+
+
+### docker-compose.yml
+```bash
+version: '3'
+services:
+
+  #PHP Service
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: digitalocean.com/php
+    container_name: app
+    restart: unless-stopped
+    tty: true
+    environment:
+      SERVICE_NAME: app
+      SERVICE_TAGS: dev
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+      - ./php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - app-network
+
+  #Nginx Service
+  webserver:
+    image: nginx:alpine
+    container_name: webserver
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./:/var/www
+      - ./nginx/conf.d/:/etc/nginx/conf.d/
+    networks:
+      - app-network
+
+  #MySQL Service
+  db:
+    image: mysql:5.7.22
+    container_name: db
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: laravel
+      MYSQL_ROOT_PASSWORD: your_mysql_root_password
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    volumes:
+      - dbdata:/var/lib/mysql/
+      - ./mysql/my.cnf:/etc/mysql/my.cnf
+    networks:
+      - app-network
+
+#Docker Networks
+networks:
+  app-network:
+    driver: bridge
+#Volumes
+volumes:
+  dbdata:
+    driver: local
+```
+### Dockerfile 
+
+```bash
+# Use the official PHP image with FPM
+FROM php:8.2-fpm
+
+# Install required dependencies
+RUN apt-get update && apt-get install -y \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    libzip-dev \
+    libonig-dev \
+    unzip \
+    curl \
+    git \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install pdo_mysql mbstring zip exif pcntl gd \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Composer
+COPY --from=composer:2.7 /usr/bin/composer /usr/bin/composer
+
+# Set working directory
+WORKDIR /var/www/laravel-app
+
+# Copy Laravel application code
+COPY . /var/www/laravel-app
+
+# Adjust permissions for Laravel directories
+RUN chmod -R 775 /var/www/laravel-app/storage /var/www/laravel-app/bootstrap/cache || true \
+    && chown -R www-data:www-data /var/www/laravel-app/storage /var/www/laravel-app/bootstrap/cache || true
+
+# Expose port 9000 for PHP-FPM
+EXPOSE 9000
+
+# Start PHP-FPM
+CMD ["php-fpm"]
+```
+
